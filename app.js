@@ -1,43 +1,44 @@
+const express = require('express');
 const nodemailer = require('nodemailer');
-const readline = require('readline');
 
-const nm = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
+const app = express();
+app.use(express.json()); 
+
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'subi2507bala@gmail.com', //  Gmail address
+    pass: 'xghm zvaw davq vbbu', //  Gmail App Password
+  },
 });
 
+// Endpoint to send email
+app.post('/send-email', async (req, res) => {
+  const { to, subject, text } = req.body;
 
-nm.question('Recipient email: ', (to) => {
-  nm.question('Subject: ', (subject) => {
-    nm.question('Message: ', (message) => {
+  // Basic check
+  if (!to || !subject || !text) {
+    return res.status(400).json({ message: 'Missing required fields.' });
+  }
 
-      //Enter from email address
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: 'subi2507bala@gmail.com',
-          pass: 'yvjl wfrh bdqq asts'
-        }
-      });
-
-      
-      const mailOptions = {
-        from: 'your-email@gmail.com',
-        to,
-        subject,
-        text: message
-      };
-
-      // email status
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.error('❌ Failed to send email:', error.message);
-        } else {
-          console.log('✅ Email sent successfully:', info.response);
-        }
-        nm.close();
-      });
-
+  try {
+    const info = await transporter.sendMail({
+      from: 'subi2507bala@gmail.com',
+      to,
+      subject,
+      text,
     });
-  });
+
+    res.json({ message: 'Email sent!', info });
+  } catch (err) {
+    console.error('Error sending email:', err);
+    res.status(500).json({ message: 'Failed to send email.', error: err.message });
+  }
+});
+
+// Start the server
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
